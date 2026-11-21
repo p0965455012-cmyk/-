@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AOM 2.0 測試控制台</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; padding: 20px; max-width: 600px; margin: auto; background: #f5f5f7; }
+    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    label { display: block; margin-top: 12px; font-weight: bold; font-size: 14px; }
+    input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+    button { margin-top: 20px; width: 100%; padding: 14px; background: #007aff; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    pre { background: #1e1e1e; color: #4af626; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 13px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>AOM 2.0 測試控制台</h2>
+    <label>租戶代碼 (tenant_id)</label>
+    <input type="text" id="tenant_id" value="STORE001">
+    <label>分店代碼 (store_id)</label>
+    <input type="text" id="store_id" value="BRANCH001">
+    <label>模組代碼 (module_id)</label>
+    <input type="text" id="module_id" value="M01">
+    <label>事件類型 (event_type)</label>
+    <select id="event_type">
+      <option value="query">query (一般查詢)</option>
+      <option value="action">action (執行動作)</option>
+      <option value="alert">alert (異常通報)</option>
+    </select>
+    <label>操作者 (requested_by)</label>
+    <input type="text" id="requested_by" value="admin">
+    <label>問題內容 (question)</label>
+    <textarea id="question" rows="3">請分析今日營運狀況</textarea>
+    <button onclick="sendTest()">發送測試請求</button>
+    <pre id="result">等待發送...</pre>
+  </div>
+
+  <script>
+    async function sendTest() {
+      const resultBox = document.getElementById('result');
+      resultBox.textContent = '傳送中...';
+      const targetUrl = 'https:' + '//learning.n8n.tw/webhook/aom-central';
+
+      const data = {
+        tenant_id: document.getElementById('tenant_id').value,
+        store_id: document.getElementById('store_id').value,
+        module_id: document.getElementById('module_id').value,
+        event_type: document.getElementById('event_type').value,
+        requested_by: document.getElementById('requested_by').value,
+        payload: { question: document.getElementById('question').value }
+      };
+
+      try {
+        const response = await fetch(targetUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify(data)
+        });
+        const text = await response.text();
+        try {
+          resultBox.textContent = JSON.stringify(JSON.parse(text), null, 2);
+        } catch {
+          resultBox.textContent = text;
+        }
+      } catch (err) {
+        resultBox.textContent = '發送失敗：' + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
